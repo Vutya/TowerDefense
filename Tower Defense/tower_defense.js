@@ -7,9 +7,9 @@ function init() {
     const WIDTH = 720;
     const HEIGHT = 540;
 
-    const TOWERS_INFO = [{width: 40, height: 40, color: "#ff0000", range: 100, damage: 50, dps: 1, cost: 30},
-        {width: 50, height: 65, color: "#00ff00", range: 150, damage: 100, dps: 1, cost: 30},
-        {width: 50, height: 55, color: "#0000ff", range: 170, damage: 70, dps: 0.5, cost: 50,}];
+    const TOWERS_INFO = [{width: 40, height: 40, range: 100, damage: 50, dps: 1, cost: 30},
+        {width: 70, height: 40, range: 150, damage: 100, dps: 1, cost: 30},
+        {width: 30, height: 60, range: 170, damage: 70, dps: 0.5, cost: 50,}];
 
     let towers = [];
     let enemies = [];
@@ -26,14 +26,6 @@ function init() {
 
     let game_started = false;
 
-    stage.on("stagemousedown", function() {
-        if (!game_started) {
-            game_started = true;
-            stage.removeAllChildren();
-            play();
-        }
-    });
-
     //--------------------------Tower--------------------------
     class Tower {
         constructor(n, x, y) {
@@ -41,7 +33,7 @@ function init() {
             this.height = TOWERS_INFO[n].height;
             this.x = x;
             this.y = y;
-            this.img = new createjs.Shape();
+            this.img = new createjs.Container();
             this.range = TOWERS_INFO[n].range;
             this.damage = TOWERS_INFO[n].damage;
             this.cost = TOWERS_INFO[n].cost;
@@ -76,16 +68,68 @@ function init() {
         }
 
         draw() {
-            this.img.graphics.beginFill(TOWERS_INFO[this.tower_type].color).drawRect(this.x - this.width * 0.5,
-                this.y - this.height * 0.5, this.width, this.height);
+            if (this.tower_type === 0) {
+                let base = new createjs.Shape();
+                base.graphics.beginFill("#ff0000").drawRect(this.x - this.width * 0.5,
+                    this.y - this.height * 0.5, this.width, this.height);
+
+                let roof = new createjs.Shape();
+                roof.graphics.beginFill("DarkRed").moveTo(this.x - this.width * 0.5, this.y - this.height * 0.5).
+                lineTo(this.x + this.width * 0.5, this.y - this.height * 0.5).
+                lineTo(this.x, this.y - this.height).
+                lineTo(this.x - this.width * 0.5, this.y - this.height * 0.5);
+
+                let window = new createjs.Shape();
+                base.graphics.beginFill("#caf0cf").drawRect(this.x - this.width * 0.2,
+                    this.y - this.height * 0.2, this.width * 0.4, this.height * 0.4);
+
+                this.img.addChild(base, roof, window);
+
+            } else if (this.tower_type === 1) {
+                let base = new createjs.Shape();
+                base.graphics.beginFill("#00ff00").drawRect(this.x - this.width * 0.5,
+                    this.y - this.height * 0.5, this.width, this.height);
+
+                let roof = new createjs.Shape();
+                roof.graphics.beginFill("#ff9266").drawEllipse(this.x - this.width * 0.5, this.y - this.height,
+                    this.width, this.height);
+
+                let window = new createjs.Shape();
+                window.graphics.beginFill("#77aeff").drawRect(this.x - this.width * 0.4,
+                    this.y - this.height * 0.2, this.width * 0.8, this.height * 0.4);
+
+                this.img.addChild(roof, base, window);
+
+            } else if (this.tower_type === 2) {
+                let base = new createjs.Shape();
+                base.graphics.beginFill("#0000ff").drawRect(this.x - this.width * 0.5,
+                    this.y - this.height * 0.5, this.width, this.height);
+
+                let door = new createjs.Shape();
+                door.graphics.beginFill("#50ffc8").drawRect(this.x - this.width * 0.25,
+                    this.y + this.height * 0.2, this.width * 0.5, this.height * 0.3).
+                drawCircle(this.x, this.y + this.height * 0.2, this.width * 0.25);
+
+                let window = new createjs.Shape();
+                window.graphics.beginFill("#77aeff").drawRect(this.x - this.width * 0.15,
+                    this.y - this.height * 0.15, this.width * 0.3, this.width * 0.3);
+
+                let roof = new createjs.Shape();
+                roof.graphics.beginFill("#0000ff").drawRect(this.x - this.width * 0.5, this.y - this.height * 0.65,
+                    this.width * 0.4, this.height * 0.2).
+                drawRect(this.x + this.width * 0.1, this.y - this.height * 0.65,
+                    this.width * 0.4, this.height * 0.2);
+
+                this.img.addChild(roof, base, door, window);
+            }
         }
     }
 
     //--------------------------Enemy--------------------------
     class Enemy {
         constructor(x, y) {
-            this.width = 40;
-            this.height = 40;
+            this.width = 30;
+            this.height = 30;
             this.x = x;
             this.y = y;
             this.img = new createjs.Shape();
@@ -97,7 +141,19 @@ function init() {
         }
 
         move() {
-            this.x += 1;
+            if (this.x > 100 - 1.5 * this.width &&
+                this.x < 100 + 1.5 * this.width &&
+                this.y > -100 && this.y < 0.8 * HEIGHT)
+                    this.y += 1;
+            else if (this.x >= 100 - 1.5 * this.width &&
+                    this.x < 260 + 1.5 * this.width &&
+                    this.y >= 0.8 * HEIGHT)
+                    this.x += 1;
+            else if (this.x >= 260 + 1.5 * this.width &&
+                    this.y > 0.4 * HEIGHT)
+                this.y -= 1;
+            else
+                this.x += 1;
         }
 
         isDead() {
@@ -109,8 +165,8 @@ function init() {
         }
 
         draw() {
-            this.img.graphics.clear().beginFill("ffffff").drawRect(this.x - this.width * 0.5, this.y - this.height * 0.5,
-                this.width, this.height);
+            this.img.graphics.clear().beginFill("ffffff").drawPolyStar(this.x, this.y, this.width, 12,
+                0.6, 90 * ticks / (FPS));
         }
     }
 
@@ -162,10 +218,27 @@ function init() {
             shots[k].draw();
 
     }
+    function draw_stage() {
+        let bg = new createjs.Shape();
+        bg.graphics.beginFill("#9a8758").drawRect(0, 0, WIDTH, HEIGHT);
+
+        let road = new createjs.Shape();
+        road.graphics.beginFill("#5c949a").drawRect(65, 0, 70, 0.8 * HEIGHT + 35).
+        drawRect(135, 0.8 * HEIGHT - 35, 205, 70).drawRect(270, 0.4 * HEIGHT - 35, 70, 0.4 * HEIGHT).
+        drawRect(270, 0.4 * HEIGHT - 35, 0.7 * WIDTH, 70);
+
+        stage.addChild(bg, road);
+    }
     function start() {
-        let txt = new createjs.Text("Click to start ", "20px Arial");
-        txt.x = WIDTH / 2;
-        txt.y = HEIGHT / 2;
+        let str = "Press 1 to choose first tower\n";
+        str += "Press 2 to choose second tower\n";
+        str += "Press 3 to choose third tower\n";
+        str += "Left click to build chosen tower\n\n";
+        str += "Click to start.";
+        let txt = new createjs.Text(str, "26px Arial");
+
+        txt.x = (WIDTH - txt.getBounds().width)/ 2;
+        txt.y = (HEIGHT - txt.getBounds().height)/ 2;
 
         stage.addChild(txt);
         stage.update();
@@ -179,16 +252,36 @@ function init() {
             if (choosen_tower === -1)
                 return;
             for (let i = 0; i < towers.length; i++) {
-                if (evt.stageX <= towers[i].x + towers[i].width * 0.95
-                    && evt.stageX >= towers[i].x - towers[i].width * 0.95
-                    && evt.stageY <= towers[i].y + towers[i].height * 0.95
-                    && evt.stageY >= towers[i].y - towers[i].height * 0.95
-                    || evt.stageX <= towers[i].width * 0.6
-                    || evt.stageX >= WIDTH - towers[i].width * 0.6
-                    || evt.stageY <= towers[i].height * 0.6
-                    || evt.stageY >= HEIGHT - towers[i].height * 0.6)
+                if (evt.stageX <= WIDTH + towers[i].width * 0.5
+                    && evt.stageX >= WIDTH - towers[i].width * 0.5
+                    && evt.stageY <= HEIGHT + towers[i].height * 0.5
+                    && evt.stageY >= HEIGHT - towers[i].height * 0.5
+                    || evt.stageX <= towers[i].x + towers[i].width * 1.1
+                    && evt.stageX >= towers[i].x - towers[i].width * 1.1
+                    && evt.stageY <= towers[i].y + towers[i].height * 1.1
+                    && evt.stageY >= towers[i].y - towers[i].height * 1.1)
                     return;
             }
+
+            if (evt.stageX > 100 - 1.1 * TOWERS_INFO[choosen_tower].width &&
+                evt.stageX < 100 + 1.1 * TOWERS_INFO[choosen_tower].width &&
+                evt.stageY > -100 && evt.stageY < 0.8 * HEIGHT)
+                return;
+            else if (evt.stageX >= 100 - 1.1 * TOWERS_INFO[choosen_tower].width &&
+                evt.stageX < 260 + 1.1 * TOWERS_INFO[choosen_tower].width &&
+                evt.stageY >= 0.8 * HEIGHT - 1.1 * TOWERS_INFO[choosen_tower].height &&
+                evt.stageY < 0.8 * HEIGHT + 1.1 * TOWERS_INFO[choosen_tower].height)
+                return;
+            else if (evt.stageX <= 290 + 1.1 * TOWERS_INFO[choosen_tower].width &&
+                evt.stageX >= 290 - 1.1 * TOWERS_INFO[choosen_tower].width &&
+                evt.stageY > 0.4 * HEIGHT - 1.1 * TOWERS_INFO[choosen_tower].height &&
+                evt.stageY < 0.8 * HEIGHT + 1.1 * TOWERS_INFO[choosen_tower].height)
+                return;
+            else if (evt.stageX >  260 - 1.1 * TOWERS_INFO[choosen_tower].width &&
+                evt.stageY > 0.4 * HEIGHT - 1.1 * TOWERS_INFO[choosen_tower].height &&
+                evt.stageY < 0.4 * HEIGHT + 1.1 * TOWERS_INFO[choosen_tower].height)
+                return;
+
             if (money < TOWERS_INFO[choosen_tower].cost)
                 return;
             money -= TOWERS_INFO[choosen_tower].cost;
@@ -196,7 +289,6 @@ function init() {
             let t = new Tower(choosen_tower, evt.stageX, evt.stageY);
             t.draw();
             towers.push(t);
-            t.detectEnemy();
         });
 
         stage.on("stagemousemove", function(evt) {
@@ -209,7 +301,7 @@ function init() {
             if (choosen_tower === -1)
                 return;
             circle.graphics.clear().beginFill(createjs.Graphics.getRGB(0,0,0, 0.2)).
-            drawCircle(evt.stageX, evt.stageY, TOWERS_INFO[choosen_tower].range * 0.95);
+            drawCircle(evt.stageX, evt.stageY, TOWERS_INFO[choosen_tower].range * 0.85);
         });
 
         document.addEventListener("keydown",function(evt) {
@@ -244,7 +336,7 @@ function init() {
             ticks += 1;
             if (ticks > FPS) {
                 ticks = 1;
-                enemies.push(new Enemy(200, 200));
+                enemies.push(new Enemy(100, -50));
             }
 
             // Actions carried out each tick (aka frame)
@@ -283,6 +375,15 @@ function init() {
             }
         }
     }
+
+    stage.on("stagemousedown", function() {
+        if (!game_started) {
+            game_started = true;
+            stage.removeAllChildren();
+            draw_stage();
+            play();
+        }
+    });
 
     start();
 }
