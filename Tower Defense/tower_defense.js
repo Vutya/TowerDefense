@@ -43,6 +43,7 @@ function init() {
             this.img = new createjs.Container();
             this.range = TOWERS_INFO[n].range;
             this.damage = TOWERS_INFO[n].damage;
+            this.cost = TOWERS_INFO[n].cost;
             this.dps = TOWERS_INFO[n].dps;
             this.tick = 0;
             this.tower_type = n;
@@ -140,6 +141,7 @@ function init() {
             this.y = y;
             this.img = new createjs.Shape();
             this.hp = enemy_hp;
+            this.speed = 20;
             this.award = 5;
             this.dead = false;
             this.color = color;
