@@ -244,7 +244,8 @@ function init() {
         stage.addChild(bg, road);
     }
     function start() {
-        let str = "Welcome to Tower Defense!\n\n";
+        let str = "Welcome to Tower Defense, Great Lord!\n";
+        str += "Kill at least 100 enemies to WIN!\n\n";
         str += "Press 1 to choose first tower (cost: " + TOWERS_INFO[0].cost + ")\n";
         str += "Cheap and balanced.\n\n";
         str += "Press 2 to choose second tower (cost: " + TOWERS_INFO[1].cost + ")\n";
