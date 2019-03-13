@@ -7,9 +7,11 @@ function init() {
     const WIDTH = 720;
     const HEIGHT = 540;
 
-    const TOWERS_INFO = [{width: 40, height: 40, range: 100, damage: 50, dps: 1, cost: 30},
-        {width: 70, height: 40, range: 150, damage: 100, dps: 1, cost: 30},
-        {width: 30, height: 60, range: 170, damage: 70, dps: 0.5, cost: 50,}];
+    const TOWERS_INFO = [
+        {width: 40, height: 40, range: 120, damage: 30, dps: 1, cost: 40},
+        {width: 70, height: 40, range: 130, damage: 100, dps: 2, cost: 60},
+        {width: 30, height: 60, range: 170, damage: 20, dps: 0.45, cost: 60,}
+        ];
 
     let towers = [];
     let enemies = [];
@@ -17,6 +19,11 @@ function init() {
 
     let choosen_tower = -1;
     let money = 200;
+    let total_enemies = 100;
+    let enemy_hp = 100;
+    let player_hp = 3;
+    let color = 0;
+    let dead = 0;
 
     let text = new createjs.Text("Money: " + money, "20px Arial");
 
@@ -36,7 +43,6 @@ function init() {
             this.img = new createjs.Container();
             this.range = TOWERS_INFO[n].range;
             this.damage = TOWERS_INFO[n].damage;
-            this.cost = TOWERS_INFO[n].cost;
             this.dps = TOWERS_INFO[n].dps;
             this.tick = 0;
             this.tower_type = n;
@@ -44,7 +50,7 @@ function init() {
         }
 
         shoot() {
-            let shot = new Shot(this.target, this.x, this.y);
+            let shot = new Shot(this.target, this.damage, this.x, this.y);
             shots.push(shot);
         }
 
@@ -129,14 +135,13 @@ function init() {
     class Enemy {
         constructor(x, y) {
             this.width = 30;
-            this.height = 30;
             this.x = x;
             this.y = y;
             this.img = new createjs.Shape();
-            this.hp = 100;
-            this.speed = 20;
+            this.hp = enemy_hp;
             this.award = 5;
             this.dead = false;
+            this.color = color;
             stage.addChild(this.img);
         }
 
@@ -160,22 +165,28 @@ function init() {
             if (this.dead) {
                 this.img.graphics.clear();
                 money += this.award;
+                total_enemies--;
+                dead++;
+                if (total_enemies % 10 === 0) {
+                    color += 25;
+                    enemy_hp += 45;
+                }
             }
             return this.dead;
         }
 
         draw() {
-            this.img.graphics.clear().beginFill("ffffff").drawPolyStar(this.x, this.y, this.width, 12,
+            this.img.graphics.clear().beginFill("rgba(" + this.color + ",0,0,1)").drawPolyStar(this.x, this.y, this.width, 12,
                 0.6, 90 * ticks / (FPS));
         }
     }
 
     //---------------------------Shot---------------------------
     class Shot {
-        constructor(target, x, y) {
+        constructor(target, dmg, x, y) {
             this.x = x;
             this.y = y;
-            this.damage = 20;
+            this.damage = dmg;
             this.speed = 2;
             this.target = target;
             this.img = new createjs.Shape();
@@ -216,8 +227,8 @@ function init() {
            enemies[j].draw();
         for (let k=0; k<shots.length; k++)
             shots[k].draw();
-
     }
+
     function draw_stage() {
         let bg = new createjs.Shape();
         bg.graphics.beginFill("#9a8758").drawRect(0, 0, WIDTH, HEIGHT);
@@ -230,9 +241,13 @@ function init() {
         stage.addChild(bg, road);
     }
     function start() {
-        let str = "Press 1 to choose first tower\n";
-        str += "Press 2 to choose second tower\n";
-        str += "Press 3 to choose third tower\n";
+        let str = "Welcome to Tower Defense!\n\n";
+        str += "Press 1 to choose first tower (cost: " + TOWERS_INFO[0].cost + ")\n";
+        str += "Cheap and balanced.\n\n";
+        str += "Press 2 to choose second tower (cost: " + TOWERS_INFO[1].cost + ")\n";
+        str += "High damage, but slow.\n\n";
+        str += "Press 3 to choose third tower (cost: " + TOWERS_INFO[2].cost + ")\n";
+        str += "Fast, long range, but low damage.\n\n";
         str += "Left click to build chosen tower\n\n";
         str += "Click to start.";
         let txt = new createjs.Text(str, "26px Arial");
@@ -285,7 +300,7 @@ function init() {
             if (money < TOWERS_INFO[choosen_tower].cost)
                 return;
             money -= TOWERS_INFO[choosen_tower].cost;
-            text.text = "Money: " + money;
+            text.text = " $ " + money + "\n❤ " + player_hp + "\n☠ " + dead ;
             let t = new Tower(choosen_tower, evt.stageX, evt.stageY);
             t.draw();
             towers.push(t);
@@ -315,8 +330,8 @@ function init() {
         });
 
 
-        text.x = 590;
-        text.y = 500;
+        text.x = 650;
+        text.y = 465;
 
         stage.addChild(circle);
         stage.addChild(text);
@@ -330,13 +345,25 @@ function init() {
 
         function handleTick(event) {
             draw();
-            text.text = "Money: " + money;
+            text.text = " $ " + money + "\n❤ " + player_hp + "\n☠ " + dead ;
 
             // Counting ticks
             ticks += 1;
-            if (ticks > FPS) {
+            if (ticks > FPS && total_enemies > 0) {
                 ticks = 1;
                 enemies.push(new Enemy(100, -50));
+            }
+
+            if (player_hp === 0) {
+                createjs.Ticker.removeAllEventListeners("tick");
+                text.text = "It's so sad, you lost!";
+                text.x = 530;
+                text.y = 500;
+                stage.update();
+            } else if (enemies.length === 0 && total_enemies <= 0) {
+                text.text = "Congratulations, my \ngreat lord! You won!";
+                text.x = 520;
+                text.y = 485;
             }
 
             // Actions carried out each tick (aka frame)
@@ -362,6 +389,8 @@ function init() {
 
             for(let i = 0, j = enemies.length; i < j; i++) {
                 if(enemies[i].isDead() || enemies[i].x > WIDTH + enemies[i].width) {
+                    if (enemies[i].x > WIDTH + enemies[i].width)
+                        player_hp--;
                     enemies[i] = null;
                     enemies.splice(i,1);
                     j--;
