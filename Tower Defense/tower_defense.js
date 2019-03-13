@@ -135,6 +135,7 @@ function init() {
     class Enemy {
         constructor(x, y) {
             this.width = 30;
+            this.height = 30;
             this.x = x;
             this.y = y;
             this.img = new createjs.Shape();
